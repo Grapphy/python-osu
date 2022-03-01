@@ -58,15 +58,21 @@ class BaseBeatmap:
         self._connector = connector
         self._update_data(data)
 
-    def __str__(self) -> str:
-        return f"Beatmap:{self.id}-{self.mode}"
-
     def __repr__(self) -> str:
         return (
             f"<Beatmap id={self.id} mode={self.mode}"
             f" status={self.status} version={self.version}"
             f" difficulty={self.difficulty_rating}>"
         )
+
+    def __eq__(self, o: Any) -> bool:
+        return isinstance(self, o) and o.id == self.id
+
+    def __ne__(self, o: Any) -> bool:
+        return not self.__eq__(o)
+
+    def __hash__(self) -> int:
+        return self.id
 
     def _update_data(self, data: BeatmapPayload) -> None:
         self.id = data["id"]
