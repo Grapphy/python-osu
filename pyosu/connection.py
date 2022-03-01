@@ -45,7 +45,7 @@ class Connector:
 
     def init_values(self) -> None:
         self.user: Optional[User] = None
-        self.users: OrderedDict[int, User] = OrderedDict()
+        self.users: Dict[int, User] = {}
         self.pm_channels: OrderedDict[int, ChatChannel] = OrderedDict()
         self.beatmapscores: OrderedDict[int, BeatmapScores] = OrderedDict()
 
@@ -59,7 +59,8 @@ class Connector:
         try:
             return self.users[int(data["id"])]
         except KeyError:
-            return User(connector=self, data=data)
+            user = User(connector=self, data=data)
+            self.users[user.id] = user
 
     def _add_pm_channel_cache(
         self, user_id: int, channel: ChatChannel
