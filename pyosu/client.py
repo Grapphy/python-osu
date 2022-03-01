@@ -31,6 +31,7 @@ from .http import HTTPClient
 from .user import User
 from .connection import Connector
 from .beatmap import Beatmap
+from .beatmapset import Beatmapset
 from .wiki import WikiPage
 from .rankings import Spotlight, Ranking
 from .news import NewsPostList
@@ -114,6 +115,10 @@ class Client:
         await self.http.oauth_login(
             grant_type="client_credentials", scope="public"
         )
+
+    async def fetch_beatmapset(self, beatmapset_id: int, /) -> Beatmapset:
+        data = await self.http.get_beatmapset(beatmapset_id)
+        return Beatmapset(connector=self._connection, data=data)
 
     async def fetch_beatmap(self, beatmap_id: int, /) -> Beatmap:
         """Fetchs a beatmap by ID.
