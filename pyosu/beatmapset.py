@@ -74,7 +74,6 @@ class BaseBeatmapset:
         self.title_unicode = data["title_unicode"]
         self.user_id = data["user_id"]
         self.video = data["video"]
-        self.beatmaps = data.get("beatmaps")
         self.converts = data.get("converts")
         self.current_user_attributes = data.get("current_user_attributes")
         self.description = data.get("description")
@@ -108,13 +107,19 @@ class BaseBeatmapset:
         self.submitted_date = data.get("submitted_date")
         self.tags = data.get("tags")
 
-        try:
-            self._handle_user(data["user"])
-        except KeyError:
-            pass
+        for handler in ("user", "beatmaps"):
+            try:
+                getattr(self, f"_handle_{handler}")(data[handler])
+            except KeyError:
+                continue
 
-    def _handle_user(self, user: UserPayload) -> None:
-        self.user = self._connector._add_user_cache(user)
+    def _handle_user(self, data: UserPayload) -> None:
+        self.user = self._connector._add_user_cache(data)
+
+    def _handle_beatmaps(self, data: BeatmapPayload) -> None:
+        self.beatmaps = [
+            self._connector._add_beatmap_cache(beatmap) for beatmap in data
+        ]
 
 
 class Beatmapset(BaseBeatmapset):
