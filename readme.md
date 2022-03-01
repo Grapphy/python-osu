@@ -79,6 +79,15 @@ async def example_client():
     await client.login("username", "password")
     print(f"Connected as: {client.user.username}")
 
+    # Getting a beatmapset by ID
+    beatmapset = await client.fetch_beatmapset(1551253)
+    # |beatmapset.id
+    # |beatmapset.creator
+    # |beatmapset.title
+    # |beatmapset.beatmaps[0].id
+    # |beatmapset.beatmaps[0].mode
+    # |beatmapset.beatmaps[0].status
+
     # Getting a beatmap by ID
     beatmap = await client.fetch_beatmap(139919)
     # |beatmap.id
@@ -120,6 +129,41 @@ async def example_client():
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     loop.run_until_complete(example_client())
+```
+
+Fetching changelogs
+-------------
+```python
+import asyncio
+from pyosu import Client
+
+# Osu Client
+client = Client()
+
+async def example_build_fetch():
+    # Login with public credentials
+    await client.public_login()
+
+    # Fetching changelog from a build
+    build = await client.fetch_build_changelog(
+        pyosu.ChangelogStream.Stable, "20160403.5"
+    )
+
+    print("Build id:", build.id)
+    print("Stream name:", build.update_stream.name)
+    print("Stream id:", build.update_stream.id)
+
+    # Fetching changelog from a stream
+    changelog = await client.fetch_changelog(pyosu.ChangelogStream.Stable)
+    print(changelog)
+
+    # Closing the connection
+    await client.logout()
+
+
+if __name__ == "__main__":
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(example_build_fetch())
 ```
 
 License
