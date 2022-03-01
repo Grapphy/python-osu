@@ -135,10 +135,10 @@ Fetching changelogs
 -------------
 ```python
 import asyncio
-from pyosu import Client
+import pyosu
 
 # Osu Client
-client = Client()
+client = pyosu.Client()
 
 async def example_build_fetch():
     # Login with public credentials
