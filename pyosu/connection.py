@@ -31,11 +31,13 @@ from collections import OrderedDict
 from .channel import ChatChannel
 from .beatmap import BeatmapScores
 from .user import User
+from .beatmap import Beatmap
 
 if TYPE_CHECKING:
+    from .types.user import User as UserPayload
+    from .types.beatmap import Beatmap as BeatmapPayload
     from .http import HTTPClient
     from .channel import ChatChannel
-    from .beatmap import Beatmap
 
 
 class Connector:
@@ -46,6 +48,7 @@ class Connector:
     def init_values(self) -> None:
         self.user: Optional[User] = None
         self.users: Dict[int, User] = {}
+        self.beatmaps: Dict[int, Beatmap] = {}
         self.pm_channels: OrderedDict[int, ChatChannel] = OrderedDict()
         self.beatmapscores: OrderedDict[int, BeatmapScores] = OrderedDict()
 
@@ -61,6 +64,15 @@ class Connector:
         except KeyError:
             user = User(connector=self, data=data)
             self.users[user.id] = user
+            return user
+
+    def _add_beatmap_cache(self, data: BeatmapPayload) -> Beatmap:
+        try:
+            return self.beatmaps[int(data["id"])]
+        except KeyError:
+            beatmap = Beatmap(connector=self, data=data)
+            self.beatmaps[beatmap.id] = beatmap
+            return beatmap
 
     def _add_pm_channel_cache(
         self, user_id: int, channel: ChatChannel
