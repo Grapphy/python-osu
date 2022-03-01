@@ -25,8 +25,6 @@ SOFTWARE.
 from __future__ import annotations
 
 from typing import Any, Dict, Optional, TYPE_CHECKING
-
-from .connection import Connector
 from .beatmap import Beatmap
 from .score import Score
 from .enums import GameMode
@@ -35,6 +33,7 @@ if TYPE_CHECKING:
     from .types.obj import ObjectID
     from .types.user import User as UserPayload
     from .channel import ChatChannel
+    from .connection import Connector
 
 
 class BaseUser:
