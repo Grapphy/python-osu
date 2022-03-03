@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional, TYPE_CHECKING
 from .beatmap import Beatmap
 from .score import Score
 from .enums import GameMode
+from .kudosu import KudosuHistory
 
 if TYPE_CHECKING:
     from .types.obj import ObjectID
@@ -204,7 +205,34 @@ class User(BaseUser):
         data["score"]["position"] = data["position"]
         return Score(connector=self._connector, data=data["score"])
 
-    async def create_pm(self, message: str) -> Any:
+    async def fetch_kudosu(
+        self, *, limit: int = 10, offset: int = 0
+    ) -> List[KudosuHistory]:
+        data = await self._connector.http.get_user_kudosu(
+            self.id, limit=limit, offset=offset
+        )
+        return [KudosuHistory(data=d) for d in data]
+
+    async def fetch_scores(
+        self,
+        type: ScoreType,
+        *,
+        include_fails: bool = False,
+        mode: GameMode = GameMode.Osu,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> List[Score]:
+        data = await self._connector.http.get_user_scores(
+            self.id,
+            type,
+            include_fails=include_fails,
+            mode=str(mode),
+            limit=limit,
+            offset=offset,
+        )
+        return [Score(connector=self._connector, data=d) for d in data]
+
+    async def create_pm(self, message: str) -> ChatChannel:
         temp = self.pm_channel
         if temp is not None:
             return temp

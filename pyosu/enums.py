@@ -46,3 +46,12 @@ class RankingType:
     Country = "country"
     Performance = "performance"
     Score = "score"
+
+
+class ScoreType(Enum):
+    best = 0
+    firsts = 1
+    recent = 2
+
+    def __str__(self):
+        return self.name
