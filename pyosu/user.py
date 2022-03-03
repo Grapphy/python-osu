@@ -29,6 +29,7 @@ from .beatmap import Beatmap
 from .score import Score
 from .enums import GameMode
 from .kudosu import KudosuHistory
+from .event import Event
 
 if TYPE_CHECKING:
     from .types.obj import ObjectID
@@ -231,6 +232,12 @@ class User(BaseUser):
             offset=offset,
         )
         return [Score(connector=self._connector, data=d) for d in data]
+
+    async def fetch_activity(
+        self, *, limit: int = 10, offset: int = 0
+    ) -> List[Event]:
+        data = await self._connector.http.get_user_recent_activity(self.id)
+        return [Event(data=d) for d in data]
 
     async def create_pm(self, message: str) -> ChatChannel:
         temp = self.pm_channel

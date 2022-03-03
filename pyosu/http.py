@@ -44,6 +44,7 @@ from .oauth import OAuth
 if TYPE_CHECKING:
     from .types import (
         beatmap,
+        beatmapset,
         build,
         channel,
         message,
@@ -228,7 +229,9 @@ class HTTPClient:
 
     ########################### Beatmapsets
 
-    def get_beatmapset(self, beatmapset_id: ObjectID) -> Response:
+    def get_beatmapset(
+        self, beatmapset_id: ObjectID
+    ) -> Response[beatmapset.Beatmapset]:
         return self.request(
             Route("GET", "/beatmapsets/{bmapset}", bmapset=beatmapset_id)
         )
