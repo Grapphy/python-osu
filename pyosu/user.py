@@ -24,10 +24,11 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Union, Optional, TYPE_CHECKING
 from .beatmap import Beatmap
+from .beatmapset import Beatmapset
 from .score import Score
-from .enums import GameMode
+from .enums import GameMode, BeatmapType
 from .kudosu import KudosuHistory
 from .event import Event
 
@@ -186,11 +187,63 @@ class BaseUser:
 
 
 class User(BaseUser):
+    """Representation of an osu! User.
+
+    Contains data from a UserCompact/User.
+
+    Operations:
+        (x == y): Compares if two osu Users are equal.
+        (x != y): Compares if two osu Users are not equal.
+        (hash(x)): Returns User's hash.
+        (str(x)): Returns User's username.
+
+    Attributes:
+        id (:obj:`int`): The user's unique ID.
+        username (:obj:`str`): The user's username.
+        avatar_url (:obj:`str`): The user's avatar url (profile picture).
+        country_code (:obj:`str`): The user's country code.
+        default_group (:obj:`str`): Default group for the user.
+        is_active (:obj:`bool`): Defines if the user was online in
+            the last months.
+        is_bot (:obj:`bool`): Specifies if the user is a bot or a real user.
+        is_deleted (:obj:`bool`): Specifies if the user no longer exists.
+        is_online (:obj:`bool`): Specifies if the user is online.
+        is_supporter (:obj:`bool`): Specifies if the user is a supporter.
+        pm_friends_only (:obj:`bool`): Specifies if the user
+            can receive messages.
+        last_visit (:obj:`str`, optional): Shows user's last visit to osu.
+        profile_colour (:obj:`str`, optional): Shows user's profile color.
+        cover_url (:obj:`str`): The user's banner url.
+        has_supported (:obj:`bool`): Specifies if the users was supported.
+        join_date (:obj:`str`): User's registration date.
+        kudosu_available (:obj:`int`): Specifies if kudosu
+            history is available.
+        kudosu_total (:obj:`int`): Total amount of kudosu items.
+        max_blocks (:obj:`int`): Max number of blocks availables.
+        max_friends (:obj:`int`): Max number of friends availables.
+        post_count (:obj:`int`): Forum posts count from the user.
+        playmode (:obj:`pyosu.GameMode`): User's default game mode.
+        playstyle (:obj:`list`): User's play styles (keyboard, mouse, etc.)
+        profile_order (:obj:`list`): User's profile orders.
+        title (:obj:`str`, optional): User's title.
+        title_url (:obj:`str`, optional): User's title url.
+        discord (:obj:`str`, optional): User's discord username.
+        twitter (:obj:`str`, optional): User's twitter username.
+        website (:obj:`str`, optional): User's personal website url.
+        location (:obj:`str`, optional): User's location.
+        interests (:obj:`str`, optional): User's personal interests.
+        occupation (:obj:`str`, optional): User's job/occupation.
+
+    """
+
     def __init__(self, *, connector: Connector, data: UserPayload) -> None:
         super().__init__(connector=connector, data=data)
 
     @property
     def pm_channel(self) -> Optional[ChatChannel]:
+        """Optional[:obj:`pyosu.ChatChannel`]: User Private Channel
+        if there is one available.
+        """
         return self._connector._get_cached_pmchannel(self.id)
 
     async def fetch_beatmap_scores(
@@ -199,16 +252,42 @@ class User(BaseUser):
         *,
         mode: Optional[GameMode] = GameMode.Osu,
     ) -> Score:
+        """Fetchs user score from a beatmap. It can be a pyosu.Beatmap
+        object or a beatmap ID. Returns a Score.
+
+        Args:
+            beatmap (:obj:`Union[pyosu.ObjectID, pyosu.Beatmap]`):
+                A given beatmap, either object or ID.
+            mode (:obj:`pyosu.GameMode`, optional):
+                Game mode category for the score.
+                Defaults to pyosu.GameMode.Osu
+
+        Returns:
+            pyosu.Score: A score object containing the score on the beatmap.
+
+        """
         bid = beatmap.id if type(beatmap) is Beatmap else beatmap
-        data = await self._connector.http.get_user_beatmap_score(
-            bid, self.id, mode=mode
-        )
+        connector = self._connector.http
+        data = await connector.get_user_beatmap_score(bid, self.id, mode=mode)
         data["score"]["position"] = data["position"]
         return Score(connector=self._connector, data=data["score"])
 
     async def fetch_kudosu(
         self, *, limit: int = 10, offset: int = 0
     ) -> List[KudosuHistory]:
+        """Fetchs user kudosu history. Returns a list with each
+        kudosu activity.
+
+        Args:
+            limit (:obj:`int`, optional): Limit of items to fetch.
+                Defaults to 10.
+            offset (:obj:`int`, optional): Offset for pagination.
+                Defaults to 0.
+
+        Returns:
+            List[pyosu.KudosuHistory]: A list of pyosu.KudosuHistory
+
+        """
         data = await self._connector.http.get_user_kudosu(
             self.id, limit=limit, offset=offset
         )
@@ -223,6 +302,24 @@ class User(BaseUser):
         limit: int = 10,
         offset: int = 0,
     ) -> List[Score]:
+        """Fetchs user recent scores of a given type. Can
+        include fails and other game modes.
+
+        Args:
+            type (:obj:`pyosu.ScoreType`): A Score type to return.
+            include_fails (:obj:`bool`, optional): True to include fails.
+                Defaults to False.
+            mode (:obj:`pyosu.GameMode`, optional): Scores game mode.
+                Defaults to pyosu.GameMode.Osu
+            limit (:obj:`int`, optional): Limit of items to fetch.
+                Defaults to 10.
+            offset (:obj:`int`, optional): Offset for pagination.
+                Defaults to 0.
+
+        Returns:
+            List[pyosu.Score]: A list containing pyosu.Score objects.
+
+        """
         data = await self._connector.http.get_user_scores(
             self.id,
             type,
@@ -233,13 +330,76 @@ class User(BaseUser):
         )
         return [Score(connector=self._connector, data=d) for d in data]
 
+    async def fetch_beatmaps(
+        self,
+        *,
+        type: BeatmapType = BeatmapType.most_played,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> Union[Beatmapset]:
+        """Fetchs beatmaps from a user. Returns a list with each
+        beatmap or beatmap play counts.
+
+        If the type is pyosu.BeatmapType.most_played it will return
+        a list with pyosu.BeatmapPlayCount. Otherwise a list with
+        pyosu.Beatmapset.
+
+        Args:
+            type (:obj:`pyosu.BeatmapType`, optional): A BeatmapType
+                to select. Defaults to pyosu.BeatmapType.most_played
+            limit (:obj:`int`, optional): Limit of items to fetch.
+                Defaults to 10.
+            offset (:obj:`int`, optional): Offset for pagination.
+                Defaults to 0.
+
+        Returns:
+            Union[Beatmapset, BeatmapPlayCount]: A list that can
+                contain either Beatmapset or BeatmapPlayCount objects.
+        """
+        data = await self._connector.http.get_user_beatmaps(
+            self.id, str(type), limit=limit, offset=offset
+        )
+
+        if type == BeatmapType.most_played:
+            return []
+        return [Beatmapset(connector=self._connector, data=d) for d in data]
+
     async def fetch_activity(
         self, *, limit: int = 10, offset: int = 0
     ) -> List[Event]:
-        data = await self._connector.http.get_user_recent_activity(self.id)
+        """Fetchs recent activity from the user.
+
+        Args:
+            limit (:obj:`int`, optional): Limit of items to fetch.
+                Defaults to 10.
+            offset (:obj:`int`, optional): Offset for pagination.
+                Defaults to 0.
+
+        Returns:
+            List[pyosu.Event]: A list containing pyosu.Event objects.
+
+        """
+        data = await self._connector.http.get_user_recent_activity(
+            self.id, limit=limit, offset=offset
+        )
         return [Event(data=d) for d in data]
 
     async def create_pm(self, message: str) -> ChatChannel:
+        """Creates a private channel to send messages to the user.
+
+        If a PM channel already exists, it will return it from
+        cache to avoid repeating the request.
+
+        Note: message parameter acts as a "hello" since it is
+        required by the API to give an initial message.
+
+        Args:
+            message (:obj:`str`): First message to send
+
+        Returns:
+            pyosu.ChatChannel: Chat object that can send and read messages.
+
+        """
         temp = self.pm_channel
         if temp is not None:
             return temp
