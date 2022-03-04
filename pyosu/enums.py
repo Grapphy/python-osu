@@ -55,3 +55,15 @@ class ScoreType(Enum):
 
     def __str__(self):
         return self.name
+
+
+class BeatmapType(Enum):
+    favourite = 0
+    graveyard = 1
+    loved = 2
+    most_played = 3
+    pending = 4
+    ranked = 5
+
+    def __str__(self):
+        return self.name
