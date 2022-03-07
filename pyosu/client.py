@@ -217,6 +217,19 @@ class Client:
         data = await self.http.get_user(user_id)
         return User(connector=self._connection, data=data)
 
+    async def fetch_users_bulk(self, users_id: List[int], /) -> List[User]:
+        """Fetchs a list of users.
+
+        Args:
+            users_id (:obj:`list`): List containing users id to fetch
+
+        Returns:
+            List[pyosu.User]: Returns a list with pyosu.User objects
+
+        """
+        data = await self.http.get_users(users_id)
+        return [User(connector=self._connection, data=d) for d in data]
+
     async def fetch_wiki(
         self, locale: str = "en", path: str = "Welcome"
     ) -> WikiPage:
