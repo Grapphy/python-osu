@@ -642,13 +642,25 @@ class HTTPClient:
         return self.request(Route("POST", "/forums/topics"), json=d_json)
 
     def get_topics_and_posts(
-        self, topic_id: ObjectID, body: str
+        self,
+        topic_id: ObjectID,
+        cursor: str = None,
+        sort: str = "id_desc",
+        limit: int = 10,
+        start: str = None,
+        end: str = None,
     ) -> Response[forum.ForumNavigation]:
-        d_json = {"body": body}
+        params: Dict[str, Any] = {
+            "cursor_string": cursor,
+            "sort": sort,
+            "limit": limit,
+            "start": start,
+            "end": end,
+        }
 
         return self.request(
-            Route("POST", "/forums/topics/{topic}/reply", topic=topic_id),
-            json=d_json,
+            Route("GET", "/forums/topics/{topic}", topic=topic_id),
+            params=params,
         )
 
     def edit_topic(
