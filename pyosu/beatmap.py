@@ -25,12 +25,20 @@ SOFTWARE.
 from __future__ import annotations
 
 from typing import Any, List, Dict, TYPE_CHECKING
+
+from collections import namedtuple
+
 from .score import Score
 from .enums import GameMode, RankingType
 
 if TYPE_CHECKING:
     from .types.beatmap import Beatmap as BeatmapPayload
     from .types.beatmap import BeatmapScores as BeatmapScoresPayload
+
+
+BeatmapPlaycount = namedtuple(
+    "BeatmapPlaycount", "id beatmap beatmapset count"
+)
 
 
 class BeatmapScores:
