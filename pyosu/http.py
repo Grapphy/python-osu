@@ -641,7 +641,7 @@ class HTTPClient:
 
         return self.request(Route("POST", "/forums/topics"), json=d_json)
 
-    def get_topics_and_posts(
+    def get_topic_with_posts(
         self,
         topic_id: ObjectID,
         cursor: str = None,
