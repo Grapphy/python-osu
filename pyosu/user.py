@@ -25,7 +25,8 @@ SOFTWARE.
 from __future__ import annotations
 
 from typing import Any, Dict, Union, Optional, TYPE_CHECKING
-from .beatmap import Beatmap
+
+from .beatmap import Beatmap, BeatmapPlaycount
 from .beatmapset import Beatmapset
 from .score import Score
 from .enums import GameMode, BeatmapType
@@ -336,7 +337,7 @@ class User(BaseUser):
         type: BeatmapType = BeatmapType.most_played,
         limit: int = 10,
         offset: int = 0,
-    ) -> Union[Beatmapset]:
+    ) -> Union[Beatmapset, BeatmapPlaycount]:
         """Fetchs beatmaps from a user. Returns a list with each
         beatmap or beatmap play counts.
 
@@ -361,7 +362,15 @@ class User(BaseUser):
         )
 
         if type == BeatmapType.most_played:
-            return []
+            return [
+                BeatmapPlaycount(
+                    id=d["id"],
+                    beatmap=d.get("beatmap"),
+                    beatmapset=d.get("beatmapset"),
+                    count=d["number"],
+                )
+                for d in data
+            ]
         return [Beatmapset(connector=self._connector, data=d) for d in data]
 
     async def fetch_activity(
