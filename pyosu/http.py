@@ -651,12 +651,18 @@ class HTTPClient:
         end: str = None,
     ) -> Response[forum.ForumNavigation]:
         params: Dict[str, Any] = {
-            "cursor_string": cursor,
             "sort": sort,
             "limit": limit,
-            "start": start,
-            "end": end,
         }
+
+        if cursor:
+            params["cursor_string"] = cursor
+
+        if start:
+            params["start"] = start
+
+        if end:
+            params["end"] = end
 
         return self.request(
             Route("GET", "/forums/topics/{topic}", topic=topic_id),
