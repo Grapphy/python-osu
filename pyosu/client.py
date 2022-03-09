@@ -32,6 +32,7 @@ from .user import User
 from .connection import Connector
 from .beatmap import Beatmap
 from .beatmapset import Beatmapset
+from .forum import ForumTopic
 from .wiki import WikiPage
 from .rankings import Spotlight, Ranking
 from .news import NewsPostList
@@ -166,6 +167,10 @@ class Client:
         key = "id" if by_id else None
         data = await self.http.lookup_changelog_build(str(query), key=key)
         return BuildChangelog(data=data)
+
+    async def fetch_topic(self, topic_id: ObjectID, /) -> ForumTopic:
+        data = await self.http.get_topic_with_posts(topic_id)
+        return ForumTopic(connector=self._connection, data=data)
 
     async def fetch_news(self, limit: int = 10, /) -> NewsPostList:
         """Fetchs news from osu.
