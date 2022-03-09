@@ -32,6 +32,7 @@ from .score import Score
 from .enums import GameMode, RankingType
 
 if TYPE_CHECKING:
+    from .connection import Connector
     from .types.beatmap import Beatmap as BeatmapPayload
     from .types.beatmap import BeatmapScores as BeatmapScoresPayload
 
