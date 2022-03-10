@@ -122,7 +122,7 @@ class HTTPClient:
             if res.status == 404:
                 raise Exception("Not found", response)
 
-            if res.status == 401:
+            if res.status in [401, 403]:
                 raise Exception("Unauthorized", response)
 
         return response
@@ -646,7 +646,7 @@ class HTTPClient:
         topic_id: ObjectID,
         cursor: str = None,
         sort: str = "id_desc",
-        limit: int = 10,
+        limit: int = 1,
         start: str = None,
         end: str = None,
     ) -> Response[forum.ForumNavigation]:
