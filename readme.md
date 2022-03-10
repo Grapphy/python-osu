@@ -26,7 +26,7 @@ To-do list
 - <s>Client access to changelog calls</s>
 - <s>Add mark_as_read() to ChatChannel</s>
 - Client access to comments calls
-- Client access to forum calls
+- <s>Client access to forum calls</s>
 - <s>Client access to search wiki calls</s>
 - Client access to news calls
 - Client access to users, wiki and ranking calls
