@@ -166,6 +166,58 @@ if __name__ == "__main__":
     loop.run_until_complete(example_build_fetch())
 ```
 
+Interacting with forums
+-----------------------
+```python
+import asyncio
+import pyosu
+
+# Osu Client
+client = pyosu.Client()
+
+async def example_forums():
+    # Login client
+    await client.login("username", "password")
+    print(f"Connected as: {client.user.username}")
+
+    # Fetching a forum thread
+    topic = await client.fetch_topic(1535730)
+
+    # Fetching replies from a thread
+    async for post in topic.fetch_posts(limit=5):
+        parsed_msg = post.raw.split("]")[-1] # Removing BBCode
+        print(f"{parsed_msg!r}")
+
+    # Replying to a thread
+    reply = await topic.reply("This is a reply to a thread")
+
+    # Creating a poll object
+    poll_options = [
+        pyosu.ForumOption.create("Option one"),
+        pyosu.ForumOption.create("Option two"),
+        pyosu.ForumOption.create("Option three"),
+        pyosu.ForumOption.create("Option four"),
+    ]
+
+    mypoll = pyosu.ForumPoll.create("This a test poll", poll_options)
+
+    # Creating a topic with poll
+    mytopic = await client.create_topic(
+        52,
+        "This a test thread",
+        "This is the body of a test thread",
+        poll=mypoll,
+    )
+
+    # Closing the connection
+    await client.logout()
+
+
+if __name__ == "__main__":
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(example_forums())
+```
+
 License
 -------
 This project is under the [MIT License](https://mit-license.org/).
