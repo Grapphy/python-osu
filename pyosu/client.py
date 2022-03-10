@@ -32,7 +32,7 @@ from .user import User
 from .connection import Connector
 from .beatmap import Beatmap
 from .beatmapset import Beatmapset
-from .forum import ForumTopic
+from .forum import ForumTopic, ForumPoll
 from .wiki import WikiPage
 from .rankings import Spotlight, Ranking
 from .news import NewsPostList
@@ -170,6 +170,28 @@ class Client:
 
     async def fetch_topic(self, topic_id: ObjectID, /) -> ForumTopic:
         data = await self.http.get_topic_with_posts(topic_id)
+        return ForumTopic(connector=self._connection, data=data)
+
+    async def create_topic(
+        self,
+        forum_id: ObjectID,
+        title: str,
+        body: str,
+        *,
+        poll: ForumPoll = None,
+    ) -> ForumTopic:
+        kwargs: Dict[str, Any] = {"with_poll": False}
+
+        if poll is not None:
+            kwargs["with_poll"] = True
+            kwargs["p_hide_results"] = poll.hide_results
+            kwargs["p_length_days"] = poll.length_days
+            kwargs["p_max_options"] = poll.max_options
+            kwargs["p_options"] = poll.options_as_string
+            kwargs["p_title"] = poll.title
+            kwargs["p_vote_change"] = poll.vote_change
+
+        data = await self.http.create_topic(body, forum_id, title, **kwargs)
         return ForumTopic(connector=self._connection, data=data)
 
     async def fetch_news(self, limit: int = 10, /) -> NewsPostList:
