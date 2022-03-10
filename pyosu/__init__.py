@@ -11,6 +11,7 @@ from .beatmap import *
 from .channel import *
 from .message import *
 from .news import *
+from .forum import *
 from .rankings import *
 from .score import *
 from .user import *
