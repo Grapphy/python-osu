@@ -24,13 +24,73 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, Optional, AsyncIterator, TYPE_CHECKING
+from typing import Any, List, Optional, AsyncIterator, TYPE_CHECKING
+from .utils import cursor_to_string
 
 if TYPE_CHECKING:
     from .types.obj import ObjectID
     from .connection import Connector
     from .types.forum import ForumNavigation as ForumNavigationPayload
     from .types.forum import ForumPost as ForumPostPayload
+
+
+class ForumOption:
+    def __init__(self, data: dict):
+        self._update_data(data)
+
+    def _update_data(self, data: dict) -> None:
+        self.id = data.get("id")
+        self.text = data.get("text")
+        self.vote_count = data.get("vote_count", 0)
+
+    @classmethod
+    def create(cls, text: str, /):
+        data = {"text": {"bbcode": text, "html": text}}
+        return cls(data=data)
+
+
+class ForumPoll:
+    def __init__(self, data: dict):
+        self._update_data(data)
+
+    @property
+    def options_as_string(self) -> str:
+        return "\n".join([t.text["bbcode"] for t in self.options])
+
+    def _update_data(self, data: dict) -> None:
+        self.title = data["title"]
+        self.options = data["options"]
+
+        self.ended_at = data.get("ended_at")
+        self.last_vote_at = data.get("last_vote_at")
+        self.started_at = data.get("started_at")
+
+        self.hide_results = data.get("hide_incomplete_results", False)
+        self.length_days = data.get("length_days", 0)
+        self.max_options = data.get("max_votes", 1)
+        self.vote_change = data.get("allow_vote_change", False)
+
+    @classmethod
+    def create(
+        cls,
+        title: str,
+        options: List[ForumOption],
+        *,
+        allow_change: bool = False,
+        max_options: int = 1,
+        length_days: int = 0,
+        hide_results: bool = False,
+    ):
+        data = {
+            "title": title,
+            "options": options,
+            "hide_incomplete_results": hide_results,
+            "length_days": length_days,
+            "max_votes": max_options,
+            "allow_vote_change": allow_change,
+        }
+
+        return cls(data=data)
 
 
 class ForumPost:
@@ -51,6 +111,10 @@ class ForumPost:
         self.forum_id = data.get("forum_id")
         self.html = data["body"].get("html")
         self.raw = data["body"].get("raw")
+
+    async def edit(self, body: str, /) -> ForumPost:
+        data = await self._connector.http.edit_post(self.id, body)
+        return ForumPost(connector=self._connector, data=data)
 
 
 class ForumTopic:
@@ -83,10 +147,12 @@ class ForumTopic:
         self.updated_at = data["topic"]["updated_at"]
         self.user_id = data["topic"]["user_id"]
 
-        self._cursor_string = ""
+    async def edit(self, title: str, /) -> ForumTopic:
+        data = await self._connector.http.edit_topic(self.id, title=title)
+        return ForumTopic(connector=self._connector, data=data)
 
     async def fetch_posts(
-        self, *, limit: int = 50
+        self, *, limit: int = 50, cursor: str = None
     ) -> AsyncIterator[ForumPost]:
         while True:
             _limit = min(50 if limit is None else limit, 50)
@@ -94,16 +160,20 @@ class ForumTopic:
                 return
 
             data = await self._connector.http.get_topic_with_posts(
-                self.id, cursor=self._cursor_string, limit=_limit
+                self.id, cursor=cursor, limit=_limit
             )
-
-            self._cursor_string = data["cursor_string"]
 
             if not data["posts"]:
                 return
 
+            if len(data["posts"]) < 50:
+                limit = 0
+
+            cursor = cursor_to_string(data["posts"][-1]["id"])
+
             for post in data["posts"]:
                 yield ForumPost(connector=self._connector, data=post)
 
-            if not self._cursor_string:
-                return
+    async def reply(self, body: str, /) -> ForumPost:
+        data = await self._connector.http.reply_topic(self.id, body)
+        return ForumPost(connector=self._connector, data=data)
