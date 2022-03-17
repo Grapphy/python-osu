@@ -28,13 +28,23 @@ from typing import Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .connection import Connector
-    from .types.user import UserCompact as UserCompactPayload
+    from .types.user import User
 
 
 class ChatMessage:
     def __init__(self, *, connector: Connector, data: object) -> None:
         self._connector = connector
         self._update_data(data)
+
+    def __repr__(self) -> str:
+        return (
+            f"<ChatMessage id={self.id} channel_id={self.channel_id}"
+            f" is_action={self.is_action} sender={self.sender!r}>"
+        )
+
+    @property
+    def sender(self) -> Optional[User]:
+        return self._connector.users.get(self.sender_id)
 
     def _update_data(self, data: object) -> None:
         self.id = int(data["message_id"])
@@ -43,10 +53,3 @@ class ChatMessage:
         self.timestamp = data["timestamp"]
         self.content = data["content"]
         self.is_action = data["is_action"]
-
-    def _handle_sender(self, user_data: UserCompactPayload) -> None:
-        # Function should check if User object already exists in
-        # cache and reference it
-        #
-        # Todo
-        self.sender = User(connector=self._connector, data=user_data)
