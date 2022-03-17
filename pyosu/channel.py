@@ -68,8 +68,11 @@ class ChatChannel:
         self._connector = connector
         self._update_data(data)
 
-    def __str__(self) -> str:
-        return f"channel={self.id} name={self.name} type={self.type}"
+    def __repr__(self) -> str:
+        return (
+            f"<ChatChannel id={self.id} name={self.name}"
+            f" type={self.type} moderated={self.moderated}>"
+        )
 
     def _update_data(self, data: object) -> None:
         self.id = int(data["channel_id"])
@@ -89,6 +92,29 @@ class ChatChannel:
             channel_id=self.id,
             message_id=self.last_message_id,
         )
+
+    async def history(
+        self, *, limit: int = 50, since: int = None
+    ) -> AsyncIterator[ForumPost]:
+        while True:
+            _limit = min(50 if limit is None else limit, 50)
+            if _limit < 1:
+                return
+
+            data = await self._connector.http.get_channel_messages(
+                self.id, limit=_limit, since=since
+            )
+
+            if not data:
+                return
+
+            if len(data) < 50:
+                limit = 0
+
+            since = data[-1]["message_id"]
+
+            for message in data:
+                yield ChatMessage(connector=self._connector, data=message)
 
     async def send(self, message: str) -> ChatMessage:
         data = await self._connector.http.send_message_to_channel(
