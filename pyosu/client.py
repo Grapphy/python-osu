@@ -74,6 +74,10 @@ class Client:
     def user(self) -> Optional[User]:
         return self._connection.user
 
+    @property
+    def pm_channels(self) -> Optional[List[ChatChannel]]:
+        return list(self._connection.pm_channels.values())
+
     async def login(self, username: str, password: str) -> None:
         """Creates OAuth token for all scopes using username
         and password. This allows the client to use lazer
@@ -91,7 +95,10 @@ class Client:
         )
 
         data = await self.http.get_own_user()
-        self._connection.user = User(connector=self._connection, data=data)
+        client_user = User(connector=self._connection, data=data)
+        self._connection.user = client_user
+        self._connection.users[client_user.id] = client_user
+        await self._connection._get_presence()
 
     async def oauth_login(self, client_id: int, client_secret: str) -> None:
         """Creates OAuth token for public scopes using a given client ID
