@@ -91,7 +91,7 @@ class Connector:
             self.beatmapscores.popitem(last=False)
 
     def create_pm_channel(self, user_id: int, data: object) -> ChatChannel:
-        channel_data = data["channel"]
+        channel_data = data.get("channel") or data
 
         pm_channel = ChatChannel(connector=self, data=channel_data)
         if user_id not in self.pm_channels:
@@ -109,3 +109,14 @@ class Connector:
             self._add_beatmapscores_cache(beatmap.id, beatmapscore)
 
         return beatmapscore
+
+    async def _get_presence(self) -> None:
+        data = await self.http.get_presence()
+
+        for channel in data:
+            if channel["type"] == "PM":
+                author = [i for i in channel["users"] if i != self.user.id][0]
+                self.create_pm_channel(author, channel)
+
+        data = await self.http.get_users(self.pm_channels.keys())
+        [self._add_user_cache(user) for user in data["users"]]
