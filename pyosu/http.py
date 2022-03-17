@@ -400,6 +400,9 @@ class HTTPClient:
 
     ############################## Chat
 
+    def get_presence(self) -> Response[List[channel.ChatChannel]]:
+        return self.request(Route("GET", "/chat/presence"))
+
     def create_new_pm(
         self, user_id: ObjectID, msg: str, is_action: bool = True
     ) -> Response[channel.NewChannel]:
