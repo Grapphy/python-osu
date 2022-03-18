@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Union, Optional, TYPE_CHECKING
+from typing import Any, Dict, Union, Optional, Tuple, TYPE_CHECKING
 
 from .beatmap import Beatmap, BeatmapPlaycount
 from .beatmapset import Beatmapset
@@ -32,6 +32,7 @@ from .score import Score
 from .enums import GameMode, BeatmapType
 from .kudosu import KudosuHistory
 from .event import Event
+from .message import ChatMessage
 
 if TYPE_CHECKING:
     from .types.obj import ObjectID
@@ -393,25 +394,50 @@ class User(BaseUser):
         )
         return [Event(data=d) for d in data]
 
-    async def create_pm(self, message: str) -> ChatChannel:
+    async def send(self, message: str) -> ChatMessage:
+        """Sends a message to the user.
+
+        You should use this coroutine when chatting to
+        a user.
+
+        Args:
+            message (:obj:`str`): Message to send
+
+        Returns:
+            pyosu.ChatMessage: Message object with content and author.
+
+        """
+        channel, msg = await self.create_pm(message)
+        if msg is not None:
+            return msg
+
+        data = await self._connector.http.send_message_to_channel(
+            channel.id, message
+        )
+        return ChatMessage(connector=self._connector, data=data)
+
+    async def create_pm(
+        self, message: str
+    ) -> Tuple[ChatChannel, Optional[ChatMessage]]:
         """Creates a private channel to send messages to the user.
 
         If a PM channel already exists, it will return it from
         cache to avoid repeating the request.
 
-        Note: message parameter acts as a "hello" since it is
-        required by the API to give an initial message.
-
         Args:
             message (:obj:`str`): First message to send
 
         Returns:
-            pyosu.ChatChannel: Chat object that can send and read messages.
+            Tuple[pyosu.ChatChannel, Optional[ChatMessage]]: Returns
+                a tuple with the PM Channel and the first message
+                if the channel was just created.
 
         """
         temp = self.pm_channel
         if temp is not None:
-            return temp
+            return temp, None
 
         data = await self._connector.http.create_new_pm(self.id, message)
-        return self._connector.create_pm_channel(self.id, data)
+        return self._connector.create_pm_channel(self.id, data), ChatMessage(
+            connector=self._connector, data=data["message"]
+        )
