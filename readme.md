@@ -109,18 +109,15 @@ async def example_client():
     # |user.is_active
 
     # Sending PMs
-    channel = await user.create_pm("hello")
-    # |channel.id
-    # |channel.name
-    # |channel.last_read_id
-
-    msg = await channel.send("how are you")
+    msg = await user.send("hello")
     # |msg.id
     # |msg.sender_id
     # |msg.timestamp
     # |msg.content
 
-    print(f"Message {msg.content!r} sent to {channel.id}")
+    # Reading PM messages
+    async for message in user.pm_channel.history(limit=None):
+        print(f"{message.sender.username}: {message.content}")
 
     # Closing the connection
     await client.logout()
