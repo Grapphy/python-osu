@@ -404,7 +404,7 @@ class HTTPClient:
         return self.request(Route("GET", "/chat/presence"))
 
     def create_new_pm(
-        self, user_id: ObjectID, msg: str, is_action: bool = True
+        self, user_id: ObjectID, msg: str, is_action: bool = False
     ) -> Response[channel.NewChannel]:
         d_json = {"target_id": user_id, "message": msg, "is_action": is_action}
         return self.request(Route("POST", "/chat/new"), json=d_json)
@@ -454,7 +454,7 @@ class HTTPClient:
         return self.request(r, params=params)
 
     def send_message_to_channel(
-        self, channel_id: ObjectID, message: str, is_action: bool = True
+        self, channel_id: ObjectID, message: str, is_action: bool = False
     ) -> Response[message.ChatMessage]:
         r = Route(
             "POST", "/chat/channels/{channel}/messages", channel=channel_id
