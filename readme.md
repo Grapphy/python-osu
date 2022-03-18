@@ -22,14 +22,18 @@ await client.http.get_user_beatmap_score()
 
 To-do list
 ----------
-- <s>Cache for PM Channels and other objects such as Scores</s>
-- <s>Client access to changelog calls</s>
-- <s>Add mark_as_read() to ChatChannel</s>
-- Client access to comments calls
-- <s>Client access to forum calls</s>
-- <s>Client access to search wiki calls</s>
-- Client access to news calls
-- Client access to users, wiki and ranking calls
+- <s>Cache for PM Channels and message authors </s>
+- <s>Changelog objects</s>
+- <s>Coroutine mark_as_read() for ChatChannel</s>
+- <s>Forum (posts and topic) objects</s>
+- <s>Wiki objects and search function</s>
+- <s>Coroutines on pyosu.User (fetch scores, beatmaps, etc)</s>
+- News listing, handle cursors and posts
+- Fetch comments, create/edit/delete comments and votes
+- Split ChatChannel into PMChannel and PubChannel
+- Beatmap discussions object with votes
+- Include undocumented endpoints
+- Notification websocket
 
 Installing
 ----------
